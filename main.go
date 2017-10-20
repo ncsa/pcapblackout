@@ -19,13 +19,23 @@ func init() {
 }
 
 func blackout(r gopacket.PacketDataSource, lt layers.LinkType, w *pcapgo.Writer) (int, error) {
+
+	replacementData := []byte("")
+
 	totalPackets := 0
 
 	ps := gopacket.NewPacketSource(r, lt)
 	for packet := range ps.Packets() {
-		fmt.Printf("%v", packet)
-		//w.WritePacket(gopacket.CaptureInfo{...}, data1)
 		totalPackets++
+		//fmt.Printf("%v", packet)
+		//w.WritePacket(gopacket.CaptureInfo{...}, data1)
+		if app := packet.ApplicationLayer(); app != nil {
+			for len(replacementData) < len(app.Payload()) {
+				replacementData = append(replacementData, replacement...)
+			}
+			copy(app.Payload()[:], replacementData[0:len(app.Payload())])
+		}
+		w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
 	}
 	return totalPackets, nil
 
@@ -35,7 +45,7 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) != 2 {
-		fmt.Printf("Usage: %s infile outfile [-replace XYZ]\n", os.Args[0])
+		fmt.Printf("Usage: %s [-replace XYZ] infile outfile\n", os.Args[0])
 		os.Exit(1)
 	}
 
