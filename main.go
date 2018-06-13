@@ -30,10 +30,10 @@ func blackout(r gopacket.PacketDataSource, lt layers.LinkType, w *pcapgo.Writer)
 		//fmt.Printf("%v", packet)
 		//w.WritePacket(gopacket.CaptureInfo{...}, data1)
 		if app := packet.ApplicationLayer(); app != nil {
-			for len(replacementData) < len(app.Payload()) {
+			for len(replacementData) < len(app.LayerContents()) {
 				replacementData = append(replacementData, replacement...)
 			}
-			copy(app.Payload()[:], replacementData[0:len(app.Payload())])
+			copy(app.LayerContents()[:], replacementData[0:len(app.LayerContents())])
 		}
 		w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
 	}
